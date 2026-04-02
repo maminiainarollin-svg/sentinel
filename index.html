@@ -3,177 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel UI - Advanced</title>
+    <title>Sentinel - Live Data</title>
     <style>
-        :root {
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #1e293b;
-            --accent: #10b981;
-        }
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0; padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            padding-bottom: 80px;
-        }
-        header {
-            background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
-            color: white;
-            padding: 50px 25px 80px;
-            text-align: center;
-            border-bottom-left-radius: 50px;
-            border-bottom-right-radius: 50px;
-        }
+        :root { --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #10b981; --orange: #f59e0b; --red: #ef4444; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 90px; }
+        header { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); color: white; padding: 40px 25px 70px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
         .container { padding: 0 20px; margin-top: -50px; }
-        
-        /* Cercle de Score */
-        .score-circle {
-            width: 120px; height: 120px;
-            border-radius: 50%;
-            background: white;
-            margin: 0 auto 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border: 8px solid #ecfdf5;
-        }
-        .score-value { font-size: 32px; font-weight: 900; color: #059669; }
-        .score-unit { font-size: 10px; color: #64748b; font-weight: bold; }
-
-        /* Cartes de conseils */
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .advice-card {
-            background: var(--card);
-            padding: 15px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border: 1px solid #f1f5f9;
-        }
-        .advice-card i { font-size: 24px; display: block; margin-bottom: 8px; }
-        .advice-card span { font-size: 12px; font-weight: 600; color: #475569; }
-
-        /* Alertes Spéciales */
-        .risk-banner {
-            background: white;
-            padding: 20px;
-            border-radius: 25px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-left: 8px solid var(--accent);
-        }
-
-        /* Boutons flottants */
-        .action-bar {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        }
-        .btn {
-            flex: 1;
-            padding: 18px;
-            border-radius: 20px;
-            border: none;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transition: 0.3s;
-        }
+        .score-circle { width: 130px; height: 130px; border-radius: 50%; background: white; margin: 0 auto 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 8px solid #eee; transition: all 0.5s ease; }
+        .score-value { font-size: 42px; font-weight: 900; color: #64748b; }
+        .score-unit { font-size: 10px; color: #94a3b8; font-weight: bold; }
+        .risk-banner { background: white; padding: 20px; border-radius: 25px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border-left: 8px solid #eee; }
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .advice-card { background: white; padding: 15px; border-radius: 18px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f1f5f9; }
+        .advice-card i { font-size: 24px; display: block; margin-bottom: 5px; }
+        .action-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 18px; border-radius: 20px; border: none; font-weight: bold; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
         .btn-primary { background: #1e293b; color: white; }
-        .btn-secondary { background: white; color: #1e293b; }
-
-        #coords { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="display: flex; justify-content: space-between; font-size: 20px;">
-            <span>🛡️</span>
-            <span id="time-display">14:50</span>
-            <span>⚙️</span>
-        </div>
-        <h2 id="city-name" style="margin: 20px 0 5px; font-size: 28px;">Antananarivo</h2>
-        <div id="coords">Prêt pour l'analyse</div>
+        <div style="display: flex; justify-content: space-between;"><span>🛡️</span> <span id="clock">--:--</span> <span>⚙️</span></div>
+        <h2 id="city-name" style="margin: 15px 0 5px; font-size: 24px;">SENTINEL</h2>
+        <div id="status-text" style="font-size: 12px; opacity: 0.8;">Prêt pour l'analyse locale</div>
     </header>
 
     <main class="container">
-        <div class="score-circle" id="main-gauge">
-            <span class="score-value">12</span>
-            <span class="score-unit">AQI AIR</span>
+        <div class="score-circle" id="gauge">
+            <span class="score-value" id="aqi-val">--</span>
+            <span class="score-unit">INDICE AQI</span>
         </div>
 
-        <div class="risk-banner">
-            <div style="font-size: 30px;">🌿</div>
+        <div class="risk-banner" id="banner">
+            <div id="main-emoji" style="font-size: 30px;">📡</div>
             <div>
-                <p style="margin:0; font-weight: bold; color: #059669;">Qualité de l'air : Excellente</p>
-                <p style="margin:0; font-size: 12px; color: #64748b;">Idéal pour vos activités extérieures.</p>
+                <p id="risk-title" style="margin:0; font-weight: bold;">Analyse en cours...</p>
+                <p id="risk-desc" style="margin:0; font-size: 12px; color: #64748b;">Activez votre position.</p>
             </div>
         </div>
 
-        <h3 style="margin-left: 10px; font-size: 16px;">Recommandations</h3>
         <div class="advice-grid">
-            <div class="advice-card">
-                <i>🏃‍♂️</i>
-                <span>Sport autorisé</span>
-            </div>
-            <div class="advice-card">
-                <i>🪟</i>
-                <span>Aérer la maison</span>
-            </div>
-            <div class="advice-card">
-                <i>🧴</i>
-                <span>UV Faible (Crème 0)</span>
-            </div>
-            <div class="advice-card">
-                <i>😷</i>
-                <span>Masque inutile</span>
-            </div>
+            <div class="advice-card"><i>🏃‍♂️</i><span id="adv-sport">Analyse...</span></div>
+            <div class="advice-card"><i>😷</i><span id="adv-mask">Analyse...</span></div>
         </div>
     </main>
 
     <div class="action-bar">
-        <button onclick="updateGPS()" class="btn btn-primary">🔄 ACTUALISER</button>
-        <button onclick="showDetails()" class="btn btn-secondary">📊 DÉTAILS</button>
+        <button onclick="fetchHealthData()" class="btn btn-primary" id="btn-main">🔍 LANCER L'ANALYSE</button>
     </div>
 
     <script>
-        function updateGPS() {
-            const btn = document.querySelector('.btn-primary');
-            btn.innerText = "ANALYSE...";
+        const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
+
+        async function fetchHealthData() {
+            const btn = document.getElementById('btn-main');
+            btn.innerText = "CONNEXION SERVEUR...";
             
-            navigator.geolocation.getCurrentPosition((pos) => {
-                document.getElementById('coords').innerText = `LAT: ${pos.coords.latitude.toFixed(2)} | LON: ${pos.coords.longitude.toFixed(2)}`;
-                btn.innerText = "MÀJ RÉUSSIE";
-                btn.style.background = "#059669";
-                setTimeout(() => { 
-                    btn.innerText = "🔄 ACTUALISER";
-                    btn.style.background = "#1e293b";
-                }, 3000);
-            }, (err) => {
-                alert("Activez le GPS pour voir les conseils précis.");
-                btn.innerText = "🔄 RÉESSAYER";
-            });
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                try {
+                    const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    const aqi = data.list[0].main.aqi; // 1 à 5
+                    updateInterface(aqi);
+                    
+                    document.getElementById('status-text').innerText = `LAT: ${lat.toFixed(2)} | LON: ${lon.toFixed(2)}`;
+                    btn.innerText = "ANALYSE TERMINÉE";
+                    setTimeout(() => btn.innerText = "🔍 RÉACTUALISER", 3000);
+
+                } catch (e) {
+                    alert("Erreur API. Vérifiez votre connexion.");
+                    btn.innerText = "🔍 RÉESSAYER";
+                }
+            }, () => alert("Veuillez activer le GPS."));
         }
 
-        // Mise à jour de l'heure
+        function updateInterface(aqi) {
+            const gauge = document.getElementById('gauge');
+            const valTxt = document.getElementById('aqi-val');
+            const banner = document.getElementById('banner');
+            const title = document.getElementById('risk-title');
+            const desc = document.getElementById('risk-desc');
+            const emoji = document.getElementById('main-emoji');
+
+            let config = { color: "#10b981", title: "Air Excellent", desc: "Aucun risque. Respirez librement.", emoji: "🌿", sport: "Conseillé", mask: "Inutile" };
+
+            if(aqi >= 3) config = { color: "#f59e0b", title: "Air Dégradé", desc: "Sensibilité possible. Attention.", emoji: "⚠️", sport: "Modéré", mask: "Optionnel" };
+            if(aqi >= 4) config = { color: "#ef4444", title: "Danger Santé", desc: "Pollution forte. Restez à l'abri.", emoji: "🚫", sport: "Déconseillé", mask: "Obligatoire" };
+
+            valTxt.innerText = aqi;
+            valTxt.style.color = config.color;
+            gauge.style.borderColor = config.color;
+            banner.style.borderLeftColor = config.color;
+            title.innerText = config.title;
+            title.style.color = config.color;
+            desc.innerText = config.desc;
+            emoji.innerText = config.emoji;
+            document.getElementById('adv-sport').innerText = config.sport;
+            document.getElementById('adv-mask').innerText = config.mask;
+        }
+
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('time-display').innerText = now.getHours() + ":" + String(now.getMinutes()).padStart(2, '0');
+            const n = new Date();
+            document.getElementById('clock').innerText = n.getHours() + ":" + String(n.getMinutes()).padStart(2, '0');
         }, 1000);
-
-        function showDetails() {
-            alert("Analyse détaillée : \nParticules fines (PM2.5) : 8µg/m³\nHumidité : 65%\nTempérature : 24°C");
-        }
     </script>
 </body>
 </html>
