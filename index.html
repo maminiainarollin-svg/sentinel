@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Pro - Analytics</title>
+    <title>Sentinel Pro - Profil Personnalisé</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
-            --bg: #f8fafc; --card: #ffffff; --text: #0f172a; 
+            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; 
             --green: #10b981; --orange: #f59e0b; --red: #ef4444; --dark: #1e293b;
         }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 110px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 110px; overflow-x: hidden; }
         
         header { 
             background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); 
@@ -20,122 +20,160 @@
 
         .container { padding: 0 20px; margin-top: -60px; }
 
+        /* Jauge */
         .score-circle { 
-            width: 130px; height: 130px; border-radius: 50%; background: white; 
-            margin: 0 auto 25px; display: flex; flex-direction: column; 
+            width: 120px; height: 120px; border-radius: 50%; background: white; 
+            margin: 0 auto 20px; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
-            border: 8px solid #f1f5f9; transition: 0.5s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 8px solid #f1f5f9;
         }
-        .score-value { font-size: 40px; font-weight: 900; color: #94a3b8; }
 
-        .card { background: white; padding: 20px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .card { background: white; padding: 18px; border-radius: 25px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .advice-card { background: white; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid #f1f5f9; }
-        
-        /* Style du Graphique */
-        .chart-container { height: 200px; width: 100%; margin-top: 10px; }
-
-        .action-bar { position: fixed; bottom: 25px; left: 20px; right: 20px; }
-        .btn-main { 
-            width: 100%; background: var(--dark); color: white; border: none; 
-            padding: 20px; border-radius: 22px; font-size: 16px; font-weight: bold; 
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+        /* Menu Profil (Slide-in) */
+        #profile-panel {
+            position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
+            background: white; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1); padding: 30px 20px;
         }
-        .loader { width: 18px; height: 18px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: none; animation: rot 1s linear infinite; }
-        @keyframes rot { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #profile-panel.open { right: 0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 900; }
+
+        /* Formulaire Profil */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #64748b; }
+        select, input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-sizing: border-box; }
+
+        .btn-main { width: 100%; background: var(--dark); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; }
+        .btn-outline { background: none; border: 2px solid var(--dark); color: var(--dark); padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; }
+
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .advice-card { background: white; padding: 12px; border-radius: 18px; text-align: center; border: 1px solid #f1f5f9; font-size: 13px; }
     </style>
 </head>
 <body>
 
+    <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
+
+    <div id="profile-panel">
+        <h2 style="margin-top: 0;">Mon Profil Santé</h2>
+        <p style="font-size: 13px; color: #64748b;">Sentinel adapte ses alertes selon votre sensibilité.</p>
+        
+        <div class="form-group">
+            <label>Prénom</label>
+            <input type="text" id="user-name" placeholder="Ex: Mamy">
+        </div>
+
+        <div class="form-group">
+            <label>Sensibilité Respiratoire</label>
+            <select id="user-sensitivity">
+                <option value="normal">Normale (Standard)</option>
+                <option value="sensitive">Sensible (Asthme/Allergie)</option>
+                <option value="child">Enfant / Nourrisson</option>
+            </select>
+        </div>
+
+        <button onclick="saveProfile()" class="btn-main" style="background: var(--green);">ENREGISTRER</button>
+        <button onclick="toggleProfile()" class="btn-outline">FERMER</button>
+    </div>
+
     <header>
-        <div style="display: flex; justify-content: space-between;"><span>🛡️</span> <span id="clock">--:--</span> <span>⚙️</span></div>
-        <h2 style="margin: 20px 0 5px; font-size: 28px;">SENTINEL</h2>
-        <div id="status-text" style="font-size: 12px; opacity: 0.8;">Analyse prédictive IA</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 22px;">🛡️</span> 
+            <span id="clock" style="font-weight: bold;">--:--</span> 
+            <span onclick="toggleProfile()" style="font-size: 24px; cursor: pointer;">👤</span>
+        </div>
+        <h2 id="welcome-msg" style="margin: 20px 0 5px; font-size: 26px;">SENTINEL</h2>
+        <div id="status-text" style="font-size: 12px; opacity: 0.8;">Chargement de vos préférences...</div>
     </header>
 
     <main class="container">
         <div class="score-circle" id="gauge">
             <span class="score-value" id="aqi-val">--</span>
-            <span class="score-unit" style="font-size: 10px; color: #94a3b8;">AQI</span>
+            <span style="font-size: 10px; color: #94a3b8; font-weight: bold;">AQI</span>
         </div>
 
         <div class="advice-grid">
-            <div class="advice-card"><i>🏃‍♂️</i><b id="adv-sport">Sport : --</b></div>
-            <div class="advice-card"><i>😷</i><b id="adv-mask">Masque : --</b></div>
+            <div class="advice-card"><i>🏃‍♂️</i><b id="adv-sport">Analyse...</b></div>
+            <div class="advice-card"><i>😷</i><b id="adv-mask">Analyse...</b></div>
         </div>
 
         <div class="card">
-            <h3 style="margin: 0 0 15px 0; font-size: 16px;">Évolution 24h (Prévisions)</h3>
-            <div class="chart-container">
-                <canvas id="myChart"></canvas>
-            </div>
+            <h3 style="margin: 0 0 10px 0; font-size: 15px;">Historique Local</h3>
+            <div style="height: 150px;"><canvas id="myChart"></canvas></div>
         </div>
     </main>
 
     <div class="action-bar">
-        <button onclick="fetchHealthData()" class="btn-main" id="btn-main">
-            <span class="loader" id="loader"></span>
-            <span id="btn-text">LANCER L'ANALYSE</span>
-        </button>
+        <button onclick="fetchHealthData()" class="btn-main" id="btn-main">🔍 SCANNER MA ZONE</button>
     </div>
 
     <script>
         const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
         let myChart;
 
-        // Initialisation du graphique vide
-        const ctx = document.getElementById('myChart').getContext('2d');
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['6h', '9h', '12h', '15h', '18h', '21h'],
-                datasets: [{
-                    label: 'Niveau AQI',
-                    data: [1, 1, 1, 1, 1, 1], // Données par défaut
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+        // Charger le profil au démarrage
+        window.onload = () => {
+            const savedName = localStorage.getItem('sentinel_name');
+            if(savedName) {
+                document.getElementById('welcome-msg').innerText = "Salut, " + savedName;
+                document.getElementById('user-name').value = savedName;
+                document.getElementById('user-sensitivity').value = localStorage.getItem('sentinel_sens') || 'normal';
+            }
+            initChart();
+        };
+
+        function toggleProfile() {
+            document.getElementById('profile-panel').classList.toggle('open');
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('user-name').value;
+            const sens = document.getElementById('user-sensitivity').value;
+            localStorage.setItem('sentinel_name', name);
+            localStorage.setItem('sentinel_sens', sens);
+            document.getElementById('welcome-msg').innerText = "Salut, " + name;
+            toggleProfile();
+            alert("Profil mis à jour !");
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Actuel', '+1h', '+2h', '+3h', '+4h', '+5h'],
+                    datasets: [{ label: 'AQI', data: [1,1,1,1,1,1], borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
 
         async function fetchHealthData() {
             const btn = document.getElementById('btn-main');
-            const loader = document.getElementById('loader');
-            btn.disabled = true; loader.style.display = "inline-block";
-
+            btn.innerText = "ANALYSE...";
+            
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude: lat, longitude: lon } = pos.coords;
-
                 try {
-                    // 1. Pollution actuelle
                     const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
                     const data = await res.json();
                     const aqi = data.list[0].main.aqi;
 
-                    // 2. Pollution prévisions (Forecast)
                     const resF = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
                     const dataF = await resF.json();
-                    
-                    // Extraire les 6 prochaines prévisions
-                    const forecastData = dataF.list.slice(0, 6).map(item => item.main.aqi);
-                    
-                    updateUI(aqi, forecastData);
-                    document.getElementById('status-text').innerText = `MÀJ RÉUSSIE : ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+                    const forecast = dataF.list.slice(0, 6).map(i => i.main.aqi);
 
-                } catch (e) {
-                    alert("API en attente d'activation...");
-                } finally {
-                    btn.disabled = false; loader.style.display = "none";
-                }
+                    updateUI(aqi, forecast);
+                } catch (e) { alert("API non encore active."); }
+                btn.innerText = "🔍 SCANNER MA ZONE";
             });
         }
 
         function updateUI(aqi, forecast) {
+            const sens = localStorage.getItem('sentinel_sens') || 'normal';
             const valTxt = document.getElementById('aqi-val');
             const colors = ["#10b981", "#10b981", "#f59e0b", "#ef4444", "#7f1d1d"];
             const currentColor = colors[aqi-1] || "#10b981";
@@ -143,10 +181,22 @@
             valTxt.innerText = aqi;
             valTxt.style.color = currentColor;
             document.getElementById('gauge').style.borderColor = currentColor;
-            document.getElementById('adv-sport').innerText = aqi >= 3 ? "Sport : Limité" : "Sport : Conseillé";
-            document.getElementById('adv-mask').innerText = aqi >= 4 ? "Masque : Requis" : "Masque : Non";
 
-            // Mise à jour du graphique avec les vraies prévisions
+            // --- LOGIQUE PERSONNALISÉE ---
+            let sportAdvice = "Conseillé";
+            let maskAdvice = "Inutile";
+
+            if(sens === 'sensitive' || sens === 'child') {
+                if(aqi >= 2) { sportAdvice = "Prudence"; maskAdvice = "Optionnel"; }
+                if(aqi >= 3) { sportAdvice = "Déconseillé"; maskAdvice = "Requis"; }
+            } else {
+                if(aqi >= 3) { sportAdvice = "Limité"; maskAdvice = "Optionnel"; }
+                if(aqi >= 4) { sportAdvice = "Interdit"; maskAdvice = "Obligatoire"; }
+            }
+
+            document.getElementById('adv-sport').innerText = "Sport : " + sportAdvice;
+            document.getElementById('adv-mask').innerText = "Masque : " + maskAdvice;
+            
             myChart.data.datasets[0].data = forecast;
             myChart.data.datasets[0].borderColor = currentColor;
             myChart.update();
