@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Pro - Profil Personnalisé</title>
+    <title>Sentinel Pro - Profil Médical</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
@@ -35,20 +35,23 @@
             position: fixed; top: 0; right: -100%; width: 85%; height: 100%;
             background: white; z-index: 1000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: -10px 0 30px rgba(0,0,0,0.1); padding: 30px 20px;
+            overflow-y: auto;
         }
         #profile-panel.open { right: 0; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 900; }
 
         /* Formulaire Profil */
         .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #64748b; }
-        select, input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-sizing: border-box; }
+        label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #64748b; text-transform: uppercase; }
+        select, input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 16px; box-sizing: border-box; background: #f8fafc; }
 
-        .btn-main { width: 100%; background: var(--dark); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; }
-        .btn-outline { background: none; border: 2px solid var(--dark); color: var(--dark); padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; }
+        .btn-main { width: 100%; background: var(--dark); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-outline { background: none; border: 2px solid var(--dark); color: var(--dark); padding: 10px; border-radius: 12px; width: 100%; margin-top: 10px; cursor: pointer; }
 
         .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .advice-card { background: white; padding: 12px; border-radius: 18px; text-align: center; border: 1px solid #f1f5f9; font-size: 13px; }
+        
+        .status-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 10px; font-size: 11px; margin-top: 5px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -56,72 +59,104 @@
     <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
 
     <div id="profile-panel">
-        <h2 style="margin-top: 0;">Mon Profil Santé</h2>
-        <p style="font-size: 13px; color: #64748b;">Sentinel adapte ses alertes selon votre sensibilité.</p>
+        <h2 style="margin-top: 0; color: var(--dark);">Mon Profil Santé</h2>
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 25px;">Précisez votre condition pour des alertes sur-mesure.</p>
         
         <div class="form-group">
-            <label>Prénom</label>
+            <label>Votre Prénom</label>
             <input type="text" id="user-name" placeholder="Ex: Mamy">
         </div>
 
         <div class="form-group">
-            <label>Sensibilité Respiratoire</label>
-            <select id="user-sensitivity">
-                <option value="normal">Normale (Standard)</option>
-                <option value="sensitive">Sensible (Asthme/Allergie)</option>
-                <option value="child">Enfant / Nourrisson</option>
+            <label>Pathologie principale</label>
+            <select id="user-condition" onchange="checkOther(this.value)">
+                <option value="Aucune">Aucune (Standard)</option>
+                <option value="Asthme">Asthme</option>
+                <option value="Allergie Pollen">Allergie au Pollen</option>
+                <option value="Insuffisance Cardiaque">Problème Cardiaque</option>
+                <option value="Bronchite Chronique">Bronchite (BPCO)</option>
+                <option value="autre">Autre (préciser ci-dessous...)</option>
             </select>
         </div>
 
-        <button onclick="saveProfile()" class="btn-main" style="background: var(--green);">ENREGISTRER</button>
-        <button onclick="toggleProfile()" class="btn-outline">FERMER</button>
+        <div class="form-group" id="other-input-div" style="display:none;">
+            <label>Précisez votre condition</label>
+            <input type="text" id="user-other" placeholder="Ex: Sinusite chronique">
+        </div>
+
+        <div class="form-group">
+            <label>Niveau de vigilance</label>
+            <select id="user-sensitivity">
+                <option value="normal">Mode Standard</option>
+                <option value="high">Haute Vigilance (Alertes précoces)</option>
+            </select>
+        </div>
+
+        <button onclick="saveProfile()" class="btn-main" style="background: var(--green); margin-top: 10px;">ENREGISTRER</button>
+        <button onclick="toggleProfile()" class="btn-outline">ANNULER</button>
     </div>
 
     <header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 22px;">🛡️</span> 
-            <span id="clock" style="font-weight: bold;">--:--</span> 
-            <span onclick="toggleProfile()" style="font-size: 24px; cursor: pointer;">👤</span>
+            <span id="clock" style="font-weight: bold; letter-spacing: 1px;">--:--</span> 
+            <span onclick="toggleProfile()" style="font-size: 26px; cursor: pointer; background: rgba(255,255,255,0.2); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">👤</span>
         </div>
         <h2 id="welcome-msg" style="margin: 20px 0 5px; font-size: 26px;">SENTINEL</h2>
-        <div id="status-text" style="font-size: 12px; opacity: 0.8;">Chargement de vos préférences...</div>
+        <div id="condition-badge" class="status-badge">Profil Standard</div>
     </header>
 
     <main class="container">
         <div class="score-circle" id="gauge">
             <span class="score-value" id="aqi-val">--</span>
-            <span style="font-size: 10px; color: #94a3b8; font-weight: bold;">AQI</span>
+            <span style="font-size: 10px; color: #94a3b8; font-weight: bold;">INDICE AQI</span>
         </div>
 
         <div class="advice-grid">
-            <div class="advice-card"><i>🏃‍♂️</i><b id="adv-sport">Analyse...</b></div>
-            <div class="advice-card"><i>😷</i><b id="adv-mask">Analyse...</b></div>
+            <div class="advice-card"><i>🏃‍♂️</i><b id="adv-sport">Sport : --</b></div>
+            <div class="advice-card"><i>😷</i><b id="adv-mask">Masque : --</b></div>
         </div>
 
         <div class="card">
-            <h3 style="margin: 0 0 10px 0; font-size: 15px;">Historique Local</h3>
+            <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #64748b;">PRÉVISIONS 24H</h3>
             <div style="height: 150px;"><canvas id="myChart"></canvas></div>
         </div>
     </main>
 
     <div class="action-bar">
-        <button onclick="fetchHealthData()" class="btn-main" id="btn-main">🔍 SCANNER MA ZONE</button>
+        <button onclick="fetchHealthData()" class="btn-main" id="btn-main">🔍 ANALYSER MA ZONE</button>
     </div>
 
     <script>
         const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
         let myChart;
 
-        // Charger le profil au démarrage
         window.onload = () => {
-            const savedName = localStorage.getItem('sentinel_name');
-            if(savedName) {
-                document.getElementById('welcome-msg').innerText = "Salut, " + savedName;
-                document.getElementById('user-name').value = savedName;
-                document.getElementById('user-sensitivity').value = localStorage.getItem('sentinel_sens') || 'normal';
-            }
+            loadSavedProfile();
             initChart();
         };
+
+        function checkOther(val) {
+            document.getElementById('other-input-div').style.display = (val === 'autre') ? 'block' : 'none';
+        }
+
+        function loadSavedProfile() {
+            const name = localStorage.getItem('s_name') || "Utilisateur";
+            let condition = localStorage.getItem('s_cond') || "Aucune";
+            const other = localStorage.getItem('s_other');
+            
+            document.getElementById('welcome-msg').innerText = "Salut, " + name;
+            document.getElementById('user-name').value = name;
+            document.getElementById('user-condition').value = condition;
+            
+            if(condition === 'autre') {
+                document.getElementById('other-input-div').style.display = 'block';
+                document.getElementById('user-other').value = other;
+                condition = other;
+            }
+            
+            document.getElementById('condition-badge').innerText = "Suivi : " + condition;
+        }
 
         function toggleProfile() {
             document.getElementById('profile-panel').classList.toggle('open');
@@ -131,12 +166,18 @@
 
         function saveProfile() {
             const name = document.getElementById('user-name').value;
+            const cond = document.getElementById('user-condition').value;
+            const other = document.getElementById('user-other').value;
             const sens = document.getElementById('user-sensitivity').value;
-            localStorage.setItem('sentinel_name', name);
-            localStorage.setItem('sentinel_sens', sens);
-            document.getElementById('welcome-msg').innerText = "Salut, " + name;
+
+            localStorage.setItem('s_name', name);
+            localStorage.setItem('s_cond', cond);
+            localStorage.setItem('s_other', other);
+            localStorage.setItem('s_sens', sens);
+
+            loadSavedProfile();
             toggleProfile();
-            alert("Profil mis à jour !");
+            alert("Profil médical enregistré avec succès !");
         }
 
         function initChart() {
@@ -144,19 +185,20 @@
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Actuel', '+1h', '+2h', '+3h', '+4h', '+5h'],
-                    datasets: [{ label: 'AQI', data: [1,1,1,1,1,1], borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }]
+                    labels: ['Actuel', '+2h', '+4h', '+6h', '+8h', '+10h'],
+                    datasets: [{ label: 'AQI', data: [1,1,1,1,1,1], borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 3, pointRadius: 0 }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
             });
         }
 
         async function fetchHealthData() {
             const btn = document.getElementById('btn-main');
-            btn.innerText = "ANALYSE...";
+            btn.innerText = "LOCALISATION...";
             
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude: lat, longitude: lon } = pos.coords;
+                btn.innerText = "SCAN EN COURS...";
                 try {
                     const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
                     const data = await res.json();
@@ -167,13 +209,14 @@
                     const forecast = dataF.list.slice(0, 6).map(i => i.main.aqi);
 
                     updateUI(aqi, forecast);
-                } catch (e) { alert("API non encore active."); }
-                btn.innerText = "🔍 SCANNER MA ZONE";
+                } catch (e) { alert("API indisponible pour le moment."); }
+                btn.innerText = "🔍 ANALYSER MA ZONE";
             });
         }
 
         function updateUI(aqi, forecast) {
-            const sens = localStorage.getItem('sentinel_sens') || 'normal';
+            const sens = localStorage.getItem('s_sens') || 'normal';
+            const cond = localStorage.getItem('s_cond') || 'Aucune';
             const valTxt = document.getElementById('aqi-val');
             const colors = ["#10b981", "#10b981", "#f59e0b", "#ef4444", "#7f1d1d"];
             const currentColor = colors[aqi-1] || "#10b981";
@@ -182,15 +225,18 @@
             valTxt.style.color = currentColor;
             document.getElementById('gauge').style.borderColor = currentColor;
 
-            // --- LOGIQUE PERSONNALISÉE ---
+            // --- ALGORITHME DE RISQUE PERSONNALISÉ ---
             let sportAdvice = "Conseillé";
             let maskAdvice = "Inutile";
 
-            if(sens === 'sensitive' || sens === 'child') {
-                if(aqi >= 2) { sportAdvice = "Prudence"; maskAdvice = "Optionnel"; }
-                if(aqi >= 3) { sportAdvice = "Déconseillé"; maskAdvice = "Requis"; }
+            // Si l'utilisateur a une pathologie ou a choisi "Haute Vigilance"
+            const isVulnerable = (cond !== 'Aucune' || sens === 'high');
+
+            if(isVulnerable) {
+                if(aqi >= 2) { sportAdvice = "Limité"; maskAdvice = "Prudence"; }
+                if(aqi >= 3) { sportAdvice = "Interdit"; maskAdvice = "Requis"; }
             } else {
-                if(aqi >= 3) { sportAdvice = "Limité"; maskAdvice = "Optionnel"; }
+                if(aqi >= 3) { sportAdvice = "Réduit"; maskAdvice = "Optionnel"; }
                 if(aqi >= 4) { sportAdvice = "Interdit"; maskAdvice = "Obligatoire"; }
             }
 
