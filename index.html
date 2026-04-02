@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel - Test Localisation</title>
+    <style>
+        /* Styles personnalisés pour éviter les erreurs de console */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        header {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            background: white;
+            color: #059669;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .container { padding: 20px; margin-top: -30px; }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+        }
+        .alert-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+        .btn-main {
+            width: 100%;
+            background: #1f2937;
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .btn-main:active { transform: scale(0.98); }
+        #coords { font-family: monospace; font-size: 12px; color: #6b7280; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0; font-size: 24px;">SENTINEL</h1>
+            <span class="status-badge">Analyse...</span>
+        </div>
+        <div style="margin-top: 20px;">
+            <p style="font-size: 12px; opacity: 0.8; margin: 0;">VOTRE ZONE</p>
+            <h2 id="zone-name" style="margin: 5px 0 0 0; font-size: 32px;">Antananarivo</h2>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div>
+                <p style="margin: 0; font-size: 14px; color: #6b7280;">Ma Position GPS</p>
+                <div id="coords">Appuyez sur le bouton pour détecter...</div>
+            </div>
+            <div style="font-size: 24px;">📍</div>
+        </div>
+
+        <h3 style="font-size: 18px; margin-bottom: 15px;">Risques Détectés</h3>
+        
+        <div id="alerts-container">
+            <div class="alert alert-info">
+                <strong>💡 Info :</strong> Autorisez la position pour une analyse précise de votre quartier.
+            </div>
+        </div>
+
+        <button onclick="getLocation()" class="btn-main">
+            ACTUALISER MA POSITION
+        </button>
+    </main>
+
+    <script>
+        function getLocation() {
+            const coordsDiv = document.getElementById('coords');
+            const statusBadge = document.querySelector('.status-badge');
+
+            if (navigator.geolocation) {
+                statusBadge.innerText = "Recherche...";
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                coordsDiv.innerHTML = "La géolocalisation n'est pas supportée.";
+            }
+        }
+
+        function showPosition(position) {
+            const lat = position.coords.latitude.toFixed(4);
+            const lon = position.coords.longitude.toFixed(4);
+            
+            document.getElementById('coords').innerHTML = `Lat: ${lat} / Lon: ${lon}`;
+            document.querySelector('.status-badge').innerText = "À JOUR";
+            document.querySelector('.status-badge').style.backgroundColor = "#fff";
+            
+            // Simulation d'analyse de risque basée sur la position
+            const alertBox = document.getElementById('alerts-container');
+            alertBox.innerHTML = `
+                <div class="alert" style="background:#ecfdf5; border-color:#10b981; color:#065f46;">
+                    <strong>✅ Zone Sécurisée :</strong> Aucun risque majeur détecté à vos coordonnées (${lat}). Qualité de l'air stable.
+                </div>
+            `;
+        }
+
+        function showError(error) {
+            const coordsDiv = document.getElementById('coords');
+            document.querySelector('.status-badge').innerText = "ERREUR";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    coordsDiv.innerHTML = "L'utilisateur a refusé la demande.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    coordsDiv.innerHTML = "Position indisponible.";
+                    break;
+                case error.TIMEOUT:
+                    coordsDiv.innerHTML = "Délai d'attente expiré.";
+                    break;
+            }
+        }
+    </script>
+
+</body>
+</html>
