@@ -3,100 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Health - Live v2</title>
+    <title>Sentinel Pro - Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
-            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; 
+            --bg: #f8fafc; --card: #ffffff; --text: #0f172a; 
             --green: #10b981; --orange: #f59e0b; --red: #ef4444; --dark: #1e293b;
         }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 100px; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 110px; }
         
-        /* Header Dynamique */
         header { 
             background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); 
             color: white; padding: 40px 25px 80px; text-align: center; 
             border-bottom-left-radius: 50px; border-bottom-right-radius: 50px;
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
         }
 
         .container { padding: 0 20px; margin-top: -60px; }
 
-        /* Jauge de Score Animée */
         .score-circle { 
-            width: 140px; height: 140px; border-radius: 50%; background: white; 
+            width: 130px; height: 130px; border-radius: 50%; background: white; 
             margin: 0 auto 25px; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
-            border: 10px solid #f1f5f9; transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            border: 8px solid #f1f5f9; transition: 0.5s;
         }
-        .score-value { font-size: 48px; font-weight: 900; color: #94a3b8; line-height: 1; }
-        .score-unit { font-size: 11px; color: #94a3b8; font-weight: bold; margin-top: 5px; }
+        .score-value { font-size: 40px; font-weight: 900; color: #94a3b8; }
 
-        /* Bannière de Risque */
-        .risk-banner { 
-            background: white; padding: 20px; border-radius: 25px; 
-            margin-bottom: 20px; display: flex; align-items: center; gap: 15px; 
-            border-left: 10px solid #e2e8f0; transition: 0.4s;
-        }
+        .card { background: white; padding: 20px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        
+        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .advice-card { background: white; padding: 15px; border-radius: 20px; text-align: center; border: 1px solid #f1f5f9; }
+        
+        /* Style du Graphique */
+        .chart-container { height: 200px; width: 100%; margin-top: 10px; }
 
-        /* Conseils */
-        .advice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .advice-card { 
-            background: white; padding: 18px; border-radius: 22px; 
-            text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); 
-            border: 1px solid #e2e8f0; 
-        }
-        .advice-card i { font-size: 28px; display: block; margin-bottom: 8px; }
-        .advice-card b { font-size: 13px; color: #475569; }
-
-        /* Bouton avec Spinner */
         .action-bar { position: fixed; bottom: 25px; left: 20px; right: 20px; }
         .btn-main { 
             width: 100%; background: var(--dark); color: white; border: none; 
             padding: 20px; border-radius: 22px; font-size: 16px; font-weight: bold; 
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15); display: flex; 
-            justify-content: center; align-items: center; gap: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-        .btn-main:disabled { opacity: 0.8; background: #475569; }
-
-        .loader {
-            width: 20px; height: 20px; border: 3px solid #FFF;
-            border-bottom-color: transparent; border-radius: 50%;
-            display: none; animation: rotation 1s linear infinite;
-        }
-
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loader { width: 18px; height: 18px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: none; animation: rot 1s linear infinite; }
+        @keyframes rot { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 22px;">🛡️</span> 
-            <span id="clock" style="font-weight: bold; letter-spacing: 1px;">--:--</span> 
-            <span style="font-size: 22px;">⚙️</span>
-        </div>
-        <h2 style="margin: 20px 0 5px; font-size: 30px; letter-spacing: -1px;">SENTINEL</h2>
-        <div id="status-text" style="font-size: 13px; opacity: 0.8;">Analyse environnementale active</div>
+        <div style="display: flex; justify-content: space-between;"><span>🛡️</span> <span id="clock">--:--</span> <span>⚙️</span></div>
+        <h2 style="margin: 20px 0 5px; font-size: 28px;">SENTINEL</h2>
+        <div id="status-text" style="font-size: 12px; opacity: 0.8;">Analyse prédictive IA</div>
     </header>
 
     <main class="container">
         <div class="score-circle" id="gauge">
             <span class="score-value" id="aqi-val">--</span>
-            <span class="score-unit">AQI INDEX</span>
-        </div>
-
-        <div class="risk-banner" id="banner">
-            <div id="main-emoji" style="font-size: 35px;">📡</div>
-            <div>
-                <p id="risk-title" style="margin:0; font-weight: bold; font-size: 18px;">Prêt à scanner</p>
-                <p id="risk-desc" style="margin:0; font-size: 13px; color: #64748b;">Lancez l'analyse pour votre zone.</p>
-            </div>
+            <span class="score-unit" style="font-size: 10px; color: #94a3b8;">AQI</span>
         </div>
 
         <div class="advice-grid">
             <div class="advice-card"><i>🏃‍♂️</i><b id="adv-sport">Sport : --</b></div>
             <div class="advice-card"><i>😷</i><b id="adv-mask">Masque : --</b></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin: 0 0 15px 0; font-size: 16px;">Évolution 24h (Prévisions)</h3>
+            <div class="chart-container">
+                <canvas id="myChart"></canvas>
+            </div>
         </div>
     </main>
 
@@ -109,76 +83,75 @@
 
     <script>
         const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
+        let myChart;
+
+        // Initialisation du graphique vide
+        const ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['6h', '9h', '12h', '15h', '18h', '21h'],
+                datasets: [{
+                    label: 'Niveau AQI',
+                    data: [1, 1, 1, 1, 1, 1], // Données par défaut
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
 
         async function fetchHealthData() {
             const btn = document.getElementById('btn-main');
-            const btnText = document.getElementById('btn-text');
             const loader = document.getElementById('loader');
-            
-            // État de chargement
-            btn.disabled = true;
-            btnText.innerText = "CONNEXION SERVEUR...";
-            loader.style.display = "inline-block";
+            btn.disabled = true; loader.style.display = "inline-block";
 
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
+                const { latitude: lat, longitude: lon } = pos.coords;
 
                 try {
-                    // Appel API
-                    const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
-                    const res = await fetch(url);
+                    // 1. Pollution actuelle
+                    const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
                     const data = await res.json();
+                    const aqi = data.list[0].main.aqi;
+
+                    // 2. Pollution prévisions (Forecast)
+                    const resF = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+                    const dataF = await resF.json();
                     
-                    if(data.list) {
-                        const aqi = data.list[0].main.aqi;
-                        updateInterface(aqi);
-                        document.getElementById('status-text').innerText = `LOCALISÉ : ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
-                    } else {
-                        throw new Error("Clé non active");
-                    }
+                    // Extraire les 6 prochaines prévisions
+                    const forecastData = dataF.list.slice(0, 6).map(item => item.main.aqi);
+                    
+                    updateUI(aqi, forecastData);
+                    document.getElementById('status-text').innerText = `MÀJ RÉUSSIE : ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
 
                 } catch (e) {
-                    alert("L'API n'est pas encore active. Réessayez d'ici 1 à 2 heures.");
+                    alert("API en attente d'activation...");
                 } finally {
-                    btn.disabled = false;
-                    btnText.innerText = "RÉACTUALISER";
-                    loader.style.display = "none";
+                    btn.disabled = false; loader.style.display = "none";
                 }
-            }, () => {
-                alert("Erreur : GPS désactivé.");
-                btn.disabled = false;
-                btnText.innerText = "RÉESSAYER";
-                loader.style.display = "none";
-            }, { timeout: 10000 });
+            });
         }
 
-        function updateInterface(aqi) {
-            const gauge = document.getElementById('gauge');
+        function updateUI(aqi, forecast) {
             const valTxt = document.getElementById('aqi-val');
-            const banner = document.getElementById('banner');
-            const title = document.getElementById('risk-title');
-            const desc = document.getElementById('risk-desc');
-            const emoji = document.getElementById('main-emoji');
-
-            let config = { color: "#10b981", title: "Air Excellent", desc: "Respirez à pleins poumons !", emoji: "🌿", sport: "Conseillé", mask: "Inutile" };
-
-            if(aqi === 3) config = { color: "#f59e0b", title: "Air Modéré", desc: "Sensibilité possible en extérieur.", emoji: "⚠️", sport: "Limité", mask: "Optionnel" };
-            if(aqi >= 4) config = { color: "#ef4444", title: "Air Toxique", desc: "Danger. Évitez de sortir.", emoji: "🚫", sport: "Interdit", mask: "Obligatoire" };
+            const colors = ["#10b981", "#10b981", "#f59e0b", "#ef4444", "#7f1d1d"];
+            const currentColor = colors[aqi-1] || "#10b981";
 
             valTxt.innerText = aqi;
-            valTxt.style.color = config.color;
-            gauge.style.borderColor = config.color;
-            banner.style.borderLeftColor = config.color;
-            title.innerText = config.title;
-            title.style.color = config.color;
-            desc.innerText = config.desc;
-            emoji.innerText = config.emoji;
-            document.getElementById('adv-sport').innerText = "Sport : " + config.sport;
-            document.getElementById('adv-mask').innerText = "Masque : " + config.mask;
+            valTxt.style.color = currentColor;
+            document.getElementById('gauge').style.borderColor = currentColor;
+            document.getElementById('adv-sport').innerText = aqi >= 3 ? "Sport : Limité" : "Sport : Conseillé";
+            document.getElementById('adv-mask').innerText = aqi >= 4 ? "Masque : Requis" : "Masque : Non";
+
+            // Mise à jour du graphique avec les vraies prévisions
+            myChart.data.datasets[0].data = forecast;
+            myChart.data.datasets[0].borderColor = currentColor;
+            myChart.update();
         }
 
-        // Horloge temps réel
         setInterval(() => {
             const n = new Date();
             document.getElementById('clock').innerText = n.getHours() + ":" + String(n.getMinutes()).padStart(2, '0');
