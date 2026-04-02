@@ -3,149 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel - Test Localisation</title>
+    <title>Sentinel - Prototype Santé</title>
     <style>
-        /* Styles personnalisés pour éviter les erreurs de console */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-            color: #1f2937;
+        :root {
+            --primary: #10b981;
+            --dark: #1f2937;
+            --light: #f3f4f6;
         }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 0;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+        /* Header avec dégradé */
         header {
             background: linear-gradient(180deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 40px 20px 60px 20px;
             text-align: center;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-        .status-badge {
-            background: white;
-            color: #059669;
-            padding: 5px 12px;
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .container { padding: 20px; margin-top: -30px; }
+        .container { padding: 0 20px; margin-top: -40px; }
+        
+        /* Cartes de données */
         .card {
             background: white;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Alertes dynamiques */
         .alert {
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 15px;
             margin-bottom: 15px;
-            border-left: 5px solid;
+            border-left: 6px solid;
+            transition: all 0.3s ease;
         }
-        .alert-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
-        .btn-main {
-            width: 100%;
-            background: #1f2937;
-            color: white;
+        .alert-wait { background: #fefce8; border-color: #facc15; color: #854d0e; }
+        .alert-safe { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+        .alert-error { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+
+        /* Boutons */
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn {
+            flex: 1;
             border: none;
             padding: 18px;
-            border-radius: 15px;
-            font-size: 16px;
+            border-radius: 18px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
         }
-        .btn-main:active { transform: scale(0.98); }
-        #coords { font-family: monospace; font-size: 12px; color: #6b7280; margin-top: 10px; }
+        .btn-gps { background: var(--dark); color: white; }
+        .btn-manual { background: white; color: var(--dark); border: 1px solid #ddd; }
+        .btn:active { transform: scale(0.95); }
+
+        #coords-display { font-family: monospace; font-size: 11px; color: #9ca3af; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin: 0; font-size: 24px;">SENTINEL</h1>
-            <span class="status-badge">Analyse...</span>
+        <div class="flex-between">
+            <span class="badge" id="status-tag">SENTINEL V1</span>
+            <span style="font-size: 20px;">🔔</span>
         </div>
-        <div style="margin-top: 20px;">
-            <p style="font-size: 12px; opacity: 0.8; margin: 0;">VOTRE ZONE</p>
-            <h2 id="zone-name" style="margin: 5px 0 0 0; font-size: 32px;">Antananarivo</h2>
+        <div style="margin-top: 25px;">
+            <p style="margin:0; opacity: 0.9; font-size: 14px;">ANALYSE DE LA ZONE</p>
+            <h2 id="current-city" style="margin: 5px 0 0 0; font-size: 36px; letter-spacing: -1px;">Localisation...</h2>
         </div>
     </header>
 
     <main class="container">
         <div class="card">
-            <div>
-                <p style="margin: 0; font-size: 14px; color: #6b7280;">Ma Position GPS</p>
-                <div id="coords">Appuyez sur le bouton pour détecter...</div>
+            <div class="flex-between">
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280;">Statut GPS</p>
+                    <div id="coords-display">En attente de signal...</div>
+                </div>
+                <div id="icon-status" style="font-size: 30px;">📡</div>
             </div>
-            <div style="font-size: 24px;">📍</div>
         </div>
 
-        <h3 style="font-size: 18px; margin-bottom: 15px;">Risques Détectés</h3>
+        <h3 style="font-size: 18px; margin: 25px 0 15px 5px;">Rapport de Risque</h3>
+        <div id="risk-report">
+            <div class="alert alert-wait">
+                <strong>En attente...</strong><br>
+                Cliquez sur le bouton ci-dessous pour lancer l'analyse environnementale.
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="startGPS()" class="btn btn-gps">📍 ACTIVER GPS</button>
+            <button onclick="askCity()" class="btn btn-manual">🏙️ VILLE</button>
+        </div>
         
-        <div id="alerts-container">
-            <div class="alert alert-info">
-                <strong>💡 Info :</strong> Autorisez la position pour une analyse précise de votre quartier.
-            </div>
-        </div>
-
-        <button onclick="getLocation()" class="btn-main">
-            ACTUALISER MA POSITION
-        </button>
+        <p style="text-align:center; font-size: 12px; color: #9ca3af; margin-top: 20px;">
+            Protégez votre santé avec des données en temps réel.
+        </p>
     </main>
 
     <script>
-        function getLocation() {
-            const coordsDiv = document.getElementById('coords');
-            const statusBadge = document.querySelector('.status-badge');
+        const riskDiv = document.getElementById('risk-report');
+        const cityTitle = document.getElementById('current-city');
+        const coordsText = document.getElementById('coords-display');
+        const statusTag = document.getElementById('status-tag');
 
-            if (navigator.geolocation) {
-                statusBadge.innerText = "Recherche...";
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
-                coordsDiv.innerHTML = "La géolocalisation n'est pas supportée.";
+        // Fonction GPS avec Timeout
+        function startGPS() {
+            statusTag.innerText = "RECHERCHE...";
+            statusTag.style.background = "#f59e0b";
+            
+            if (!navigator.geolocation) {
+                showManualError("GPS non supporté par ce navigateur.");
+                return;
             }
+
+            // Options : haute précision, s'arrête après 6 secondes
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 6000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(successGPS, errorGPS, options);
         }
 
-        function showPosition(position) {
-            const lat = position.coords.latitude.toFixed(4);
-            const lon = position.coords.longitude.toFixed(4);
+        function successGPS(pos) {
+            const lat = pos.coords.latitude.toFixed(4);
+            const lon = pos.coords.longitude.toFixed(4);
             
-            document.getElementById('coords').innerHTML = `Lat: ${lat} / Lon: ${lon}`;
-            document.querySelector('.status-badge').innerText = "À JOUR";
-            document.querySelector('.status-badge').style.backgroundColor = "#fff";
-            
-            // Simulation d'analyse de risque basée sur la position
-            const alertBox = document.getElementById('alerts-container');
-            alertBox.innerHTML = `
-                <div class="alert" style="background:#ecfdf5; border-color:#10b981; color:#065f46;">
-                    <strong>✅ Zone Sécurisée :</strong> Aucun risque majeur détecté à vos coordonnées (${lat}). Qualité de l'air stable.
+            cityTitle.innerText = "Zone Détectée";
+            coordsText.innerText = `Latitude: ${lat} | Longitude: ${lon}`;
+            statusTag.innerText = "À JOUR";
+            statusTag.style.background = "rgba(255,255,255,0.2)";
+            document.getElementById('icon-status').innerText = "✅";
+
+            riskDiv.innerHTML = `
+                <div class="alert alert-safe">
+                    <strong>Analyse Réussie !</strong><br>
+                    Aucun risque majeur détecté à votre position GPS. Air pur à 92%.
                 </div>
             `;
         }
 
-        function showError(error) {
-            const coordsDiv = document.getElementById('coords');
-            document.querySelector('.status-badge').innerText = "ERREUR";
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    coordsDiv.innerHTML = "L'utilisateur a refusé la demande.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    coordsDiv.innerHTML = "Position indisponible.";
-                    break;
-                case error.TIMEOUT:
-                    coordsDiv.innerHTML = "Délai d'attente expiré.";
-                    break;
+        function errorGPS(err) {
+            console.warn(`ERREUR (${err.code}): ${err.message}`);
+            let msg = "Erreur de signal.";
+            if(err.code === 1) msg = "Accès GPS refusé.";
+            if(err.code === 3) msg = "Signal trop faible (Timeout).";
+            
+            showManualError(msg);
+        }
+
+        function showManualError(msg) {
+            statusTag.innerText = "ERREUR";
+            statusTag.style.background = "#ef4444";
+            document.getElementById('icon-status').innerText = "❌";
+            riskDiv.innerHTML = `
+                <div class="alert alert-error">
+                    <strong>Erreur GPS : ${msg}</strong><br>
+                    Essayez de sortir ou utilisez le bouton "VILLE" pour continuer.
+                </div>
+            `;
+        }
+
+        // Mode Manuel si le GPS échoue
+        function askCity() {
+            const city = prompt("Quelle est votre ville actuelle ?");
+            if (city) {
+                cityTitle.innerText = city;
+                coordsText.innerText = "Mode manuel (Estimation)";
+                statusTag.innerText = "MODE VILLE";
+                statusTag.style.background = "#3b82f6";
+                document.getElementById('icon-status').innerText = "🏙️";
+                
+                riskDiv.innerHTML = `
+                    <div class="alert alert-safe" style="border-color: #3b82f6; color: #1e3a8a; background: #eff6ff;">
+                        <strong>Analyse Locale (${city})</strong><br>
+                        Risque modéré de pollution urbaine. Pensez à vous hydrater.
+                    </div>
+                `;
             }
         }
     </script>
-
 </body>
 </html>
