@@ -3,173 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Ultra</title>
+    <title>Sentinel - Santé Simple</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { 
-            --bg: #f8fafc; --card: #ffffff; --text: #0f172a; 
-            --green: #10b981; --orange: #f59e0b; --red: #ef4444; --dark: #1e293b;
-            --accent: #3b82f6;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--text); padding-bottom: 120px; transition: 0.3s; }
+        :root { --bg: #f4f7f6; --white: #ffffff; --dark: #1a202c; --green: #48bb78; --orange: #ed8936; --red: #f56565; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 100px; }
         
-        /* Header Amélioré */
-        header { 
-            background: linear-gradient(135deg, #0f172a 0%, #334155 100%); 
-            color: white; padding: 40px 25px 90px; text-align: center; 
-            border-bottom-left-radius: 40px; border-bottom-right-radius: 40px;
-        }
+        /* Header */
+        header { background: #004d40; color: white; padding: 30px 20px 60px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        .container { padding: 0 15px; margin-top: -40px; }
 
-        .container { padding: 0 15px; margin-top: -70px; }
+        /* Score Principal */
+        .main-card { background: white; border-radius: 25px; padding: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .aqi-circle { width: 100px; height: 100px; border-radius: 50%; border: 8px solid #edf2f7; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 35px; font-weight: 900; }
 
-        /* Jauge Animée */
-        .gauge-container { position: relative; width: 150px; height: 150px; margin: 0 auto 20px; }
-        .score-circle { 
-            width: 100%; height: 100%; border-radius: 50%; background: white; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 8px solid #f1f5f9;
-            animation: pulse 3s infinite ease-in-out;
-        }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        /* Grille des gaz simplifiée */
+        .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .gas-card { background: #f8fafc; padding: 12px; border-radius: 15px; border-bottom: 4px solid #cbd5e0; }
+        .gas-name { font-size: 12px; font-weight: bold; color: #718096; display: block; }
+        .gas-status { font-size: 13px; font-weight: bold; }
 
-        /* Grille de Polluants */
-        .pollutant-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .p-item { background: #f1f5f9; padding: 10px; border-radius: 15px; text-align: center; }
-        .p-label { font-size: 10px; font-weight: bold; color: #64748b; display: block; }
-        .p-val { font-size: 14px; font-weight: bold; color: var(--dark); }
+        /* Menu Profil */
+        #profile-panel { position: fixed; top: 0; right: -100%; width: 90%; height: 100%; background: white; z-index: 1000; transition: 0.4s; padding: 20px; box-sizing: border-box; }
+        #profile-panel.open { right: 0; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 900; }
 
-        .card { background: white; padding: 20px; border-radius: 25px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
-        
-        /* Dark Mode Toggle */
-        .theme-switch { position: absolute; top: 40px; left: 25px; font-size: 20px; cursor: pointer; }
-        
-        .btn-main { 
-            width: 100%; background: var(--dark); color: white; border: none; padding: 20px; 
-            border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;
-            transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .btn-main:active { transform: scale(0.95); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .btn-pay { background: #004d40; color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
 
+    <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
+
+    <div id="profile-panel">
+        <h2>Modifier mon profil</h2>
+        <label>Mon Prénom</label>
+        <input type="text" id="in-name" placeholder="Rollin">
+        <label>Ma Maladie / Sensibilité</label>
+        <select id="in-cond">
+            <option value="Aucune">Aucune (En bonne santé)</option>
+            <option value="Asthme">Asthme</option>
+            <option value="Allergie">Allergies</option>
+            <option value="Cardiaque">Problème Cardiaque</option>
+        </select>
+        <button class="btn-pay" onclick="saveProfile()">ENREGISTRER</button>
+        <button onclick="toggleProfile()" style="background:none; border:none; width:100%; margin-top:10px; color:#718096;">Fermer sans enregistrer</button>
+    </div>
+
     <header>
-        <div class="theme-switch" onclick="toggleDarkMode()">🌓</div>
-        <div style="display: flex; justify-content: flex-end; align-items: center;">
-            <span onclick="toggleProfile()" style="cursor: pointer; font-size: 26px;">👤</span>
+        <div style="display: flex; justify-content: space-between;">
+            <span id="clock" style="font-weight: bold;">--:--</span>
+            <span onclick="toggleProfile()" style="cursor:pointer">👤 Modifier Profil</span>
         </div>
-        <h2 id="user-title" style="margin: 10px 0 5px; letter-spacing: -1px;">SENTINEL</h2>
-        <div id="user-sub" style="font-size: 12px; opacity: 0.7;">Analyseur de gaz haute précision</div>
+        <h1 id="hi-name" style="margin: 15px 0 5px; font-size: 24px;">Salut !</h1>
+        <p id="hi-cond" style="font-size: 12px; opacity: 0.8;">Chargement de votre profil...</p>
     </header>
 
     <main class="container">
-        <div class="gauge-container">
-            <div class="score-circle" id="gauge">
-                <b id="aqi-val" style="font-size: 50px; color: #94a3b8;">--</b>
-                <span style="font-size: 11px; color: #94a3b8; font-weight: 800;">AQI</span>
-            </div>
+        <div class="main-card">
+            <div class="aqi-circle" id="circle">--</div>
+            <h3 id="aqi-text" style="margin: 5px 0;">Analyse requise</h3>
+            <p id="ai-simple-advice" style="font-size: 14px; color: #4a5568;">Cliquez sur le bouton bleu pour vérifier l'air autour de vous.</p>
         </div>
 
-        <div class="card" style="border-left: 5px solid var(--accent);">
-            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 8px; letter-spacing: 1px;">IA RECOMMENDATION</div>
-            <div id="ai-advice" style="font-size: 15px; line-height: 1.4;">Initialisation des capteurs...</div>
-        </div>
-
-        <div class="card">
-            <h3 style="margin: 0 0 15px 0; font-size: 14px;">ANALYSE DES COMPOSANTS (μg/m³)</h3>
-            <div class="pollutant-grid">
-                <div class="p-item"><span class="p-label">PM2.5</span><span class="p-val" id="gas-pm25">-</span></div>
-                <div class="p-item"><span class="p-label">PM10</span><span class="p-val" id="gas-pm10">-</span></div>
-                <div class="p-item"><span class="p-label">CO</span><span class="p-val" id="gas-co">-</span></div>
-                <div class="p-item"><span class="p-label">NO2</span><span class="p-val" id="gas-no2">-</span></div>
-                <div class="p-item"><span class="p-label">O3</span><span class="p-val" id="gas-o3">-</span></div>
-                <div class="p-item"><span class="p-label">SO2</span><span class="p-val" id="gas-so2">-</span></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3 style="margin: 0 0 10px 0; font-size: 14px;">PRÉVISIONS 12H</h3>
-            <div style="height: 130px;"><canvas id="chart"></canvas></div>
+        <div class="gas-grid">
+            <div class="gas-card" id="card-pm25"><span class="gas-name">Poussières (PM2.5)</span><span class="gas-status" id="st-pm25">-</span></div>
+            <div class="gas-card" id="card-co"><span class="gas-name">Échappement (CO)</span><span class="gas-status" id="st-co">-</span></div>
+            <div class="gas-card" id="card-no2"><span class="gas-name">Usines (NO2)</span><span class="gas-status" id="st-no2">-</span></div>
+            <div class="gas-card" id="card-so2"><span class="gas-name">Soufre (SO2)</span><span class="gas-status" id="st-so2">-</span></div>
         </div>
     </main>
 
-    <div style="position: fixed; bottom: 25px; left: 20px; right: 20px;">
-        <button onclick="runApp()" class="btn-main" id="btn">🚀 SCANNER L'ENVIRONNEMENT</button>
+    <div style="position: fixed; bottom: 20px; left: 15px; right: 15px;">
+        <button class="btn-pay" style="background:#3182ce;" onclick="scan()">🔍 VÉRIFIER L'AIR MAINTENANT</button>
     </div>
 
     <script>
-        const KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
-        let chart;
+        const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
 
-        function toggleDarkMode() {
-            document.body.style.filter = document.body.style.filter === 'invert(0.9) hue-rotate(180deg)' ? 'none' : 'invert(0.9) hue-rotate(180deg)';
+        window.onload = () => {
+            const name = localStorage.getItem('sn_name') || "Rollin";
+            const cond = localStorage.getItem('sn_cond') || "Aucune";
+            document.getElementById('hi-name').innerText = "Salut, " + name;
+            document.getElementById('hi-cond').innerText = "Suivi médical : " + cond;
+            document.getElementById('in-name').value = name;
+            document.getElementById('in-cond').value = cond;
+        };
+
+        function toggleProfile() {
+            document.getElementById('profile-panel').classList.toggle('open');
+            const o = document.getElementById('overlay'); o.style.display = o.style.display === 'block' ? 'none' : 'block';
         }
 
-        async function runApp() {
-            const btn = document.getElementById('btn');
-            btn.innerText = "CAPTATION DES GAZ...";
-            
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { latitude: lat, longitude: lon } = pos.coords;
-                try {
-                    const r1 = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${KEY}`);
-                    const d1 = await r1.json();
-                    const data = d1.list[0];
-                    
-                    animateValue("aqi-val", 0, data.main.aqi, 1000);
-                    updateGasDetails(data.components);
-                    
-                    const r2 = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${KEY}`);
-                    const d2 = await r2.json();
-                    updateUI(data.main.aqi, d2.list.slice(0, 6).map(i => i.main.aqi));
-                    
-                } catch (e) { alert("Erreur de connexion"); }
-                btn.innerText = "🚀 RÉACTUALISER LE SCAN";
+        function saveProfile() {
+            localStorage.setItem('sn_name', document.getElementById('in-name').value);
+            localStorage.setItem('sn_cond', document.getElementById('in-cond').value);
+            location.reload();
+        }
+
+        async function scan() {
+            navigator.geolocation.getCurrentPosition(async (p) => {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${p.coords.latitude}&lon=${p.coords.longitude}&appid=${API_KEY}`);
+                const d = await res.json();
+                const main = d.list[0];
+                updateDisplay(main.main.aqi, main.components);
             });
         }
 
-        function animateValue(id, start, end, duration) {
-            let obj = document.getElementById(id);
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerText = Math.floor(progress * (end - start) + start);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
+        function updateDisplay(aqi, comp) {
+            const circle = document.getElementById('circle');
+            const aqiText = document.getElementById('aqi-text');
+            const advice = document.getElementById('ai-simple-advice');
+            const cond = localStorage.getItem('sn_cond');
 
-        function updateGasDetails(comp) {
-            document.getElementById('gas-pm25').innerText = comp.pm2_5.toFixed(1);
-            document.getElementById('gas-pm10').innerText = comp.pm10.toFixed(1);
-            document.getElementById('gas-co').innerText = Math.floor(comp.co);
-            document.getElementById('gas-no2').innerText = comp.no2.toFixed(1);
-            document.getElementById('gas-o3').innerText = comp.o3.toFixed(1);
-            document.getElementById('gas-so2').innerText = comp.so2.toFixed(1);
-        }
-
-        function updateUI(aqi, forecast) {
-            const colors = ["#10b981", "#10b981", "#f59e0b", "#ef4444", "#7f1d1d"];
-            const color = colors[aqi-1] || "#10b981";
-            document.getElementById('aqi-val').style.color = color;
-            document.getElementById('gauge').style.borderColor = color;
+            // Mise à jour cercle principal
+            const colors = ["#48bb78", "#48bb78", "#ed8936", "#f56565", "#742a2a"];
+            const labels = ["Excellent", "Correct", "Moyen", "Mauvais", "Dangereux"];
             
-            let advice = aqi <= 2 ? "Air pur à Madagascar. Excellente condition pour le sport." : "Prudence conseillée pour les profils sensibles.";
-            document.getElementById('ai-advice').innerText = advice;
+            circle.innerText = aqi;
+            circle.style.borderColor = colors[aqi-1];
+            circle.style.color = colors[aqi-1];
+            aqiText.innerText = "L'air est " + labels[aqi-1];
+            aqiText.style.color = colors[aqi-1];
 
-            chart.data.datasets[0].data = forecast;
-            chart.data.datasets[0].borderColor = color;
-            chart.update();
+            // Conseil simple
+            if(aqi <= 2) advice.innerText = "Tout va bien. Vous pouvez sortir sans crainte.";
+            else advice.innerText = "Attention, l'air est pollué. Portez un masque si vous avez " + (cond !== "Aucune" ? "votre " + cond : "une sensibilité") + ".";
+
+            // Mise à jour des petits gaz (Simplifié)
+            updateGasCard('pm25', comp.pm2_5, 15, 30);
+            updateGasCard('co', comp.co, 500, 1000);
+            updateGasCard('no2', comp.no2, 40, 80);
+            updateGasCard('so2', comp.so2, 20, 50);
         }
 
-        // Init Chart (Vide)
-        const ctx = document.getElementById('chart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: ['Actuel', '+2h', '+4h', '+6h', '+8h', '+10h'], datasets: [{ data: [0,0,0,0,0,0], borderColor: '#cbd5e1', tension: 0.4, fill: true, backgroundColor: 'rgba(59,130,246,0.05)', pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
-        });
+        function updateGasCard(id, val, limitGreen, limitOrange) {
+            const el = document.getElementById('st-' + id);
+            const card = document.getElementById('card-' + id);
+            if(val < limitGreen) { el.innerText = "PROPRE"; card.style.borderBottomColor = "#48bb78"; }
+            else if(val < limitOrange) { el.innerText = "MODÉRÉ"; card.style.borderBottomColor = "#ed8936"; }
+            else { el.innerText = "ÉLEVÉ"; card.style.borderBottomColor = "#f56565"; }
+        }
+
+        setInterval(() => { const d = new Date(); document.getElementById('clock').innerText = d.getHours() + ":" + String(d.getMinutes()).padStart(2, '0'); }, 1000);
     </script>
 </body>
 </html>
