@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel - Santé & Localisation</title>
+    <title>Sentinel Multi-User & Precise</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #f0f4f8; --white: #ffffff; --dark: #1a202c; --green: #48bb78; --teal: #004d40; --blue: #3182ce; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 100px; }
+        :root { --bg: #f0f4f8; --white: #ffffff; --dark: #1a202c; --green: #48bb78; --teal: #004d40; --blue: #3182ce; --red: #e53e3e; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 110px; }
         
         header { background: var(--teal); color: white; padding: 30px 20px 60px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
         .container { padding: 0 15px; margin-top: -40px; }
@@ -16,20 +16,20 @@
         .aqi-circle { width: 90px; height: 90px; border-radius: 50%; border: 6px solid #edf2f7; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; }
 
         .weather-row { display: flex; justify-content: space-around; align-items: center; background: #f8fafc; padding: 15px; border-radius: 20px; margin: 15px 0; border: 1px solid #e2e8f0; }
-        .w-temp { font-size: 24px; font-weight: bold; color: var(--teal); }
-        .w-desc { font-size: 12px; text-transform: uppercase; font-weight: bold; color: #4a5568; }
-
+        
         .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .gas-card { background: white; padding: 12px; border-radius: 15px; border-left: 5px solid #cbd5e0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .gas-name { font-size: 11px; font-weight: bold; color: #718096; display: block; margin-bottom: 4px; }
-        .gas-status { font-size: 13px; font-weight: bold; }
+        .gas-card { background: white; padding: 12px; border-radius: 15px; border-left: 5px solid #cbd5e0; }
 
-        #profile-panel { position: fixed; top: 0; right: -100%; width: 90%; height: 100%; background: white; z-index: 1000; transition: 0.4s; padding: 25px; box-sizing: border-box; }
+        /* Panel Profil Amélioré */
+        #profile-panel { position: fixed; top: 0; right: -100%; width: 90%; height: 100%; background: white; z-index: 1000; transition: 0.4s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         #profile-panel.open { right: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 900; }
 
-        input, select { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; }
-        .btn-pay { background: var(--teal); color: white; border: none; padding: 18px; width: 100%; border-radius: 20px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .profile-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f7fafc; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; }
+        .profile-item.active { border-color: var(--blue); background: #ebf8ff; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 10px; }
+        .btn-pay { background: var(--teal); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -37,152 +37,176 @@
     <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
 
     <div id="profile-panel">
-        <h2 style="color: var(--teal);">Mon Profil Santé</h2>
-        <label>Prénom</label>
-        <input type="text" id="in-name" placeholder="Votre nom">
-        <label>Pathologie</label>
-        <select id="in-cond">
-            <option value="Aucune">Aucune</option>
-            <option value="Asthme">Asthme</option>
-            <option value="Allergie">Allergies</option>
-            <option value="Cardiaque">Problème Cardiaque</option>
-        </select>
-        <button class="btn-pay" onclick="saveProfile()">ENREGISTRER</button>
+        <h2 style="color: var(--teal); margin-top:0;">Gestion des Profils</h2>
+        
+        <div id="profile-list" style="margin-bottom: 20px;">
+            </div>
+
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 15px;">
+            <h4 style="margin:0 0 10px 0;">Ajouter un membre</h4>
+            <input type="text" id="new-name" placeholder="Prénom (ex: Rollin)">
+            <select id="new-cond">
+                <option value="Aucune">Aucune pathologie</option>
+                <option value="Asthme">Asthme</option>
+                <option value="Allergie">Allergies</option>
+                <option value="Cardiaque">Cardiaque</option>
+            </select>
+            <button class="btn-pay" style="background: var(--blue);" onclick="addProfile()">+ AJOUTER</button>
+        </div>
+        
         <button onclick="toggleProfile()" style="background:none; border:none; width:100%; margin-top:20px; color:#718096;">Fermer</button>
     </div>
 
     <header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span id="clock" style="font-weight: bold;">--:--</span>
-            <span onclick="toggleProfile()" style="cursor:pointer; background:rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 10px; font-size: 13px;">👤 PROFIL</span>
+            <span onclick="toggleProfile()" style="cursor:pointer; background:rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 10px; font-size: 13px;">👥 PROFILS</span>
         </div>
         <h1 id="hi-name" style="margin: 15px 0 5px; font-size: 26px;">Salut !</h1>
-        <div id="user-location" style="font-size: 11px; opacity: 0.8; margin-bottom: 8px;">📍 Localisation non définie</div>
-        <p id="hi-cond" style="font-size: 12px; opacity: 0.9;">Prêt pour l'analyse</p>
+        <div id="user-location" style="font-size: 12px; font-weight: bold; color: #fbbf24; margin-bottom: 8px;">📍 Localisation précise...</div>
+        <p id="hi-cond" style="font-size: 12px; opacity: 0.9;">Prêt pour le scan</p>
     </header>
 
     <main class="container">
         <div class="main-card">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                <div>
-                    <div class="aqi-circle" id="circle">--</div>
-                    <span style="font-size: 10px; font-weight: bold; color: #a0aec0;">AQI</span>
-                </div>
-                <div style="text-align: left; max-width: 60%;">
-                    <h3 id="aqi-text" style="margin: 0; font-size: 18px;">Scanner requis</h3>
-                    <p id="ai-simple-advice" style="font-size: 13px; color: #718096; margin: 5px 0 0;">Analyse complète en cours...</p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                <div class="aqi-circle" id="circle">--</div>
+                <div style="text-align: left;">
+                    <h3 id="aqi-text" style="margin: 0; font-size: 18px;">En attente</h3>
+                    <p id="ai-advice" style="font-size: 12px; color: #718096;">Lancez l'analyse complète.</p>
                 </div>
             </div>
         </div>
 
         <div class="main-card" id="weather-box" style="display: none;">
             <div class="weather-row">
-                <div id="w-icon" style="font-size: 40px;">☀️</div>
-                <div>
-                    <div class="w-temp" id="w-temp">--°C</div>
-                    <div class="w-desc" id="w-desc">--</div>
-                </div>
-                <div style="text-align: right; font-size: 11px; color: #718096;">
-                    💧 Humidité: <b id="w-hum">--%</b><br>
-                    💨 Vent: <b id="w-wind">--km/h</b>
+                <div id="w-icon" style="font-size: 35px;">☀️</div>
+                <div id="w-temp" style="font-size: 22px; font-weight: bold;">--°C</div>
+                <div style="text-align: right; font-size: 11px;">
+                    Humidité: <b id="w-hum">--%</b><br>Vent: <b id="w-wind">--km/h</b>
                 </div>
             </div>
         </div>
 
         <div class="gas-grid">
-            <div class="gas-card" id="card-pm25"><span class="gas-name">Poussières (PM2.5)</span><span class="gas-status" id="st-pm25">-</span></div>
-            <div class="gas-card" id="card-co"><span class="gas-name">Échappement (CO)</span><span class="gas-status" id="st-co">-</span></div>
-            <div class="gas-card" id="card-no2"><span class="gas-name">Gaz Usines (NO2)</span><span class="gas-status" id="st-no2">-</span></div>
-            <div class="gas-card" id="card-so2"><span class="gas-name">Soufre (SO2)</span><span class="gas-status" id="st-so2">-</span></div>
+            <div class="gas-card" id="card-pm25"><span class="gas-name">Poussières</span><span id="st-pm25">-</span></div>
+            <div class="gas-card" id="card-co"><span class="gas-name">Échappement</span><span id="st-co">-</span></div>
+            <div class="gas-card" id="card-no2"><span class="gas-name">Usines</span><span id="st-no2">-</span></div>
+            <div class="gas-card" id="card-so2"><span class="gas-name">Soufre</span><span id="st-so2">-</span></div>
         </div>
     </main>
 
     <div style="position: fixed; bottom: 20px; left: 15px; right: 15px;">
-        <button class="btn-pay" style="background:var(--blue);" onclick="fullScan()">🔍 ANALYSER MA POSITION EXACTE</button>
+        <button class="btn-pay" style="background:var(--blue); box-shadow: 0 4px 15px rgba(49,130,206,0.4);" onclick="fullScan()">🔍 ANALYSER MA POSITION</button>
     </div>
 
     <script>
         const API_KEY = "d2f39e40a9ae387053d6e2e3c34b673c";
+        let profiles = JSON.parse(localStorage.getItem('sn_profiles')) || [{name: "Rollin", cond: "Allergie", active: true}];
 
-        window.onload = () => {
-            const name = localStorage.getItem('sn_name') || "Rollin";
-            const cond = localStorage.getItem('sn_cond') || "Allergie";
-            document.getElementById('hi-name').innerText = "Salut, " + name;
-            document.getElementById('hi-cond').innerText = "Suivi : " + cond;
-            document.getElementById('in-name').value = name;
-            document.getElementById('in-cond').value = cond;
-        };
+        window.onload = () => { renderProfiles(); updateHeader(); };
 
-        function toggleProfile() {
+        function toggleProfile() { 
             document.getElementById('profile-panel').classList.toggle('open');
             const o = document.getElementById('overlay'); o.style.display = o.style.display === 'block' ? 'none' : 'block';
         }
 
-        function saveProfile() {
-            localStorage.setItem('sn_name', document.getElementById('in-name').value);
-            localStorage.setItem('sn_cond', document.getElementById('in-cond').value);
+        function renderProfiles() {
+            const list = document.getElementById('profile-list');
+            list.innerHTML = profiles.map((p, i) => `
+                <div class="profile-item ${p.active ? 'active' : ''}" onclick="setActive(${i})">
+                    <div><b>${p.name}</b><br><small>${p.cond}</small></div>
+                    ${profiles.length > 1 ? `<span onclick="deleteProfile(event, ${i})" style="color:var(--red); font-weight:bold;">✕</span>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function addProfile() {
+            const name = document.getElementById('new-name').value;
+            const cond = document.getElementById('new-cond').value;
+            if(!name) return;
+            profiles.forEach(p => p.active = false);
+            profiles.push({name, cond, active: true});
+            saveAndReload();
+        }
+
+        function setActive(index) {
+            profiles.forEach((p, i) => p.active = (i === index));
+            saveAndReload();
+        }
+
+        function deleteProfile(e, index) {
+            e.stopPropagation();
+            profiles.splice(index, 1);
+            if(!profiles.some(p => p.active)) profiles[0].active = true;
+            saveAndReload();
+        }
+
+        function saveAndReload() {
+            localStorage.setItem('sn_profiles', JSON.stringify(profiles));
             location.reload();
         }
 
+        function updateHeader() {
+            const active = profiles.find(p => p.active);
+            document.getElementById('hi-name').innerText = "Salut, " + active.name;
+            document.getElementById('hi-cond').innerText = "Suivi : " + active.cond;
+        }
+
         async function fullScan() {
-            document.getElementById('ai-simple-advice').innerText = "Recherche satellite...";
+            document.getElementById('ai-advice').innerText = "Géolocalisation précise...";
             navigator.geolocation.getCurrentPosition(async (p) => {
-                const lat = p.coords.latitude;
-                const lon = p.coords.longitude;
-
+                const lat = p.coords.latitude; const lon = p.coords.longitude;
                 try {
-                    // 1. Nom du lieu (Geocoding)
-                    const resG = await fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`);
+                    // Localisation avec précision accrue
+                    const resG = await fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=3&appid=${API_KEY}`);
                     const dataG = await resG.json();
+                    let locName = "Antananarivo";
                     if(dataG[0]) {
-                        document.getElementById('user-location').innerText = `📍 ${dataG[0].name}, Antananarivo`;
+                        // On cherche le nom le plus précis (souvent le quartier)
+                        locName = dataG[0].local_names?.fr || dataG[0].name;
+                        if(dataG[0].state) locName += `, ${dataG[0].state}`;
                     }
+                    document.getElementById('user-location').innerText = `📍 ${locName}`;
 
-                    // 2. Pollution & Météo
                     const [resP, resW] = await Promise.all([
                         fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
                         fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`)
                     ]);
-                    
-                    const dataP = await resP.json();
-                    const dataW = await resW.json();
-                    updateUI(dataP.list[0], dataW);
-                } catch (e) { alert("Erreur de connexion aux serveurs."); }
+                    updateUI(await resP.json(), await resW.json());
+                } catch (e) { console.error(e); }
             });
         }
 
-        function updateUI(pollu, weather) {
+        function updateUI(polluData, weather) {
+            const pollu = polluData.list[0];
             const aqi = pollu.main.aqi;
             document.getElementById('weather-box').style.display = 'block';
             document.getElementById('w-temp').innerText = Math.round(weather.main.temp) + "°C";
-            document.getElementById('w-desc').innerText = weather.weather[0].description;
             document.getElementById('w-hum').innerText = weather.main.humidity + "%";
             document.getElementById('w-wind').innerText = Math.round(weather.wind.speed * 3.6) + "km/h";
 
             const colors = ["#48bb78", "#48bb78", "#ed8936", "#f56565", "#742a2a"];
-            const labels = ["Excellent", "Correct", "Moyen", "Mauvais", "Critique"];
             const circle = document.getElementById('circle');
-            
             circle.innerText = aqi;
             circle.style.borderColor = colors[aqi-1];
             circle.style.color = colors[aqi-1];
-            document.getElementById('aqi-text').innerText = "L'air est " + labels[aqi-1];
-            document.getElementById('aqi-text').style.color = colors[aqi-1];
 
-            const cond = localStorage.getItem('sn_cond');
-            document.getElementById('ai-simple-advice').innerText = (aqi <= 2) ? "Air sain. Aucune restriction pour votre profil." : "Prudence. Évitez les efforts si vous ressentez une gêne.";
+            const active = profiles.find(p => p.active);
+            let txt = aqi <= 2 ? "Air sain pour vous." : "Attention " + active.name + ", l'air est chargé.";
+            document.getElementById('ai-advice').innerText = txt;
 
-            updateGasCard('pm25', pollu.components.pm2_5, 15, 30);
-            updateGasCard('co', pollu.components.co, 500, 1000);
-            updateGasCard('no2', pollu.components.no2, 40, 80);
-            updateGasCard('so2', pollu.components.so2, 20, 50);
+            updateGas('pm25', pollu.components.pm2_5, 15, 30);
+            updateGas('co', pollu.components.co, 500, 1000);
+            updateGas('no2', pollu.components.no2, 40, 80);
+            updateGas('so2', pollu.components.so2, 20, 50);
         }
 
-        function updateGasCard(id, val, limitGreen, limitOrange) {
+        function updateGas(id, val, g, o) {
             const el = document.getElementById('st-' + id);
             const card = document.getElementById('card-' + id);
-            if(val < limitGreen) { el.innerText = "Sain"; card.style.borderLeftColor = "#48bb78"; }
-            else if(val < limitOrange) { el.innerText = "Moyen"; card.style.borderLeftColor = "#ed8936"; }
+            if(val < g) { el.innerText = "Sain"; card.style.borderLeftColor = "#48bb78"; }
+            else if(val < o) { el.innerText = "Moyen"; card.style.borderLeftColor = "#ed8936"; }
             else { el.innerText = "Élevé"; card.style.borderLeftColor = "#f56565"; }
         }
 
