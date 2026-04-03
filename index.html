@@ -3,33 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Multi-User & Precise</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Sentinel Pro - Madagascar</title>
     <style>
-        :root { --bg: #f0f4f8; --white: #ffffff; --dark: #1a202c; --green: #48bb78; --teal: #004d40; --blue: #3182ce; --red: #e53e3e; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 110px; }
+        :root { --bg: #f0f4f8; --teal: #004d40; --blue: #3182ce; --green: #48bb78; --orange: #ed8936; --red: #e53e3e; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #1a202c; padding-bottom: 100px; transition: 0.3s; }
         
-        header { background: var(--teal); color: white; padding: 30px 20px 60px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        header { background: var(--teal); color: white; padding: 30px 20px 60px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; position: relative; }
         .container { padding: 0 15px; margin-top: -40px; }
 
-        .main-card { background: white; border-radius: 25px; padding: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        .aqi-circle { width: 90px; height: 90px; border-radius: 50%; border: 6px solid #edf2f7; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; }
-
-        .weather-row { display: flex; justify-content: space-around; align-items: center; background: #f8fafc; padding: 15px; border-radius: 20px; margin: 15px 0; border: 1px solid #e2e8f0; }
+        .card { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 15px; }
         
-        .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .gas-card { background: white; padding: 12px; border-radius: 15px; border-left: 5px solid #cbd5e0; }
+        /* Jauge de pollution */
+        .aqi-container { display: flex; align-items: center; justify-content: center; gap: 20px; }
+        .aqi-circle { width: 90px; height: 90px; border-radius: 50%; border: 6px solid #edf2f7; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 900; transition: 0.5s; }
 
-        /* Panel Profil Amélioré */
-        #profile-panel { position: fixed; top: 0; right: -100%; width: 90%; height: 100%; background: white; z-index: 1000; transition: 0.4s; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        /* SURPRISE : Zone de Recommandations Visuelles */
+        .bonus-actions { display: flex; justify-content: space-around; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+        .action-item { text-align: center; font-size: 10px; font-weight: bold; opacity: 0.3; transition: 0.3s; }
+        .action-item.active { opacity: 1; transform: scale(1.1); color: var(--teal); }
+        .action-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+
+        /* Météo */
+        .weather-row { display: flex; justify-content: space-around; align-items: center; background: #f8fafc; padding: 15px; border-radius: 20px; border: 1px solid #e2e8f0; }
+        
+        /* Grille des Gaz */
+        .gas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .gas-card { background: white; padding: 12px; border-radius: 15px; border-left: 5px solid #cbd5e0; display: flex; justify-content: space-between; align-items: center; }
+        .gas-name { font-size: 11px; font-weight: bold; color: #718096; }
+        .gas-status { font-size: 12px; font-weight: bold; }
+
+        /* Panel Profils */
+        #profile-panel { position: fixed; top: 0; right: -100%; width: 90%; height: 100%; background: white; z-index: 1000; transition: 0.4s; padding: 25px; box-sizing: border-box; }
         #profile-panel.open { right: 0; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 900; }
-
-        .profile-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f7fafc; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; }
+        .profile-item { padding: 12px; background: #f7fafc; border-radius: 12px; margin-bottom: 8px; border: 2px solid transparent; cursor: pointer; }
         .profile-item.active { border-color: var(--blue); background: #ebf8ff; }
-        
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 10px; }
-        .btn-pay { background: var(--teal); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; }
+
+        .btn-main { background: var(--blue); color: white; border: none; padding: 18px; width: 100%; border-radius: 20px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(49,130,206,0.3); }
     </style>
 </head>
 <body>
@@ -37,67 +47,69 @@
     <div class="overlay" id="overlay" onclick="toggleProfile()"></div>
 
     <div id="profile-panel">
-        <h2 style="color: var(--teal); margin-top:0;">Gestion des Profils</h2>
-        
-        <div id="profile-list" style="margin-bottom: 20px;">
-            </div>
-
-        <div style="background: #f1f5f9; padding: 15px; border-radius: 15px;">
-            <h4 style="margin:0 0 10px 0;">Ajouter un membre</h4>
-            <input type="text" id="new-name" placeholder="Prénom (ex: Rollin)">
-            <select id="new-cond">
-                <option value="Aucune">Aucune pathologie</option>
-                <option value="Asthme">Asthme</option>
-                <option value="Allergie">Allergies</option>
-                <option value="Cardiaque">Cardiaque</option>
-            </select>
-            <button class="btn-pay" style="background: var(--blue);" onclick="addProfile()">+ AJOUTER</button>
-        </div>
-        
-        <button onclick="toggleProfile()" style="background:none; border:none; width:100%; margin-top:20px; color:#718096;">Fermer</button>
+        <h2 style="color: var(--teal);">Membres de la famille</h2>
+        <div id="profile-list"></div>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <h4>Ajouter un profil</h4>
+        <input type="text" id="new-name" placeholder="Nom" style="width:90%; padding:10px; margin-bottom:10px;">
+        <select id="new-cond" style="width:96%; padding:10px; margin-bottom:10px;">
+            <option value="Aucune">Aucune pathologie</option>
+            <option value="Asthme">Asthme</option>
+            <option value="Allergie">Allergies</option>
+            <option value="Cardiaque">Cardiaque</option>
+        </select>
+        <button onclick="addProfile()" class="btn-main" style="background:var(--teal)">AJOUTER</button>
+        <button onclick="toggleProfile()" style="margin-top:20px; width:100%; background:none; border:none; color:gray;">Fermer</button>
     </div>
 
     <header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span id="clock" style="font-weight: bold;">--:--</span>
-            <span onclick="toggleProfile()" style="cursor:pointer; background:rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 10px; font-size: 13px;">👥 PROFILS</span>
+            <span onclick="toggleProfile()" style="cursor:pointer; background:rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 12px; font-size: 12px;">👥 PROFILS</span>
         </div>
-        <h1 id="hi-name" style="margin: 15px 0 5px; font-size: 26px;">Salut !</h1>
-        <div id="user-location" style="font-size: 12px; font-weight: bold; color: #fbbf24; margin-bottom: 8px;">📍 Localisation précise...</div>
-        <p id="hi-cond" style="font-size: 12px; opacity: 0.9;">Prêt pour le scan</p>
+        <h1 id="hi-name" style="margin: 15px 0 5px;">Salut !</h1>
+        <div id="user-location" style="font-size: 12px; font-weight: bold; color: #fbbf24; margin-bottom: 5px;">📍 Localisation...</div>
+        <p id="hi-cond" style="font-size: 12px; opacity: 0.8;">Chargement du profil...</p>
     </header>
 
     <main class="container">
-        <div class="main-card">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+        <div class="card">
+            <div class="aqi-container">
                 <div class="aqi-circle" id="circle">--</div>
                 <div style="text-align: left;">
-                    <h3 id="aqi-text" style="margin: 0; font-size: 18px;">En attente</h3>
-                    <p id="ai-advice" style="font-size: 12px; color: #718096;">Lancez l'analyse complète.</p>
+                    <h3 id="aqi-text" style="margin: 0; font-size: 18px;">Prêt à scanner</h3>
+                    <p id="ai-advice" style="font-size: 12px; color: #718096; margin-top: 4px;">Cliquez sur le bouton bleu.</p>
                 </div>
+            </div>
+            
+            <div class="bonus-actions">
+                <div class="action-item" id="act-mask"><span class="action-icon">😷</span>MASQUE</div>
+                <div class="action-item" id="act-sport"><span class="action-icon">🏃</span>SPORT</div>
+                <div class="action-item" id="act-window"><span class="action-icon">🪟</span>AÉRER</div>
+                <div class="action-item" id="act-child"><span class="action-icon">👶</span>SORTIE</div>
             </div>
         </div>
 
-        <div class="main-card" id="weather-box" style="display: none;">
+        <div class="card" id="weather-box" style="display: none;">
             <div class="weather-row">
                 <div id="w-icon" style="font-size: 35px;">☀️</div>
                 <div id="w-temp" style="font-size: 22px; font-weight: bold;">--°C</div>
-                <div style="text-align: right; font-size: 11px;">
+                <div style="text-align: right; font-size: 11px; color: #718096;">
                     Humidité: <b id="w-hum">--%</b><br>Vent: <b id="w-wind">--km/h</b>
                 </div>
             </div>
         </div>
 
         <div class="gas-grid">
-            <div class="gas-card" id="card-pm25"><span class="gas-name">Poussières</span><span id="st-pm25">-</span></div>
-            <div class="gas-card" id="card-co"><span class="gas-name">Échappement</span><span id="st-co">-</span></div>
-            <div class="gas-card" id="card-no2"><span class="gas-name">Usines</span><span id="st-no2">-</span></div>
-            <div class="gas-card" id="card-so2"><span class="gas-name">Soufre</span><span id="st-so2">-</span></div>
+            <div class="gas-card" id="card-pm25"><span class="gas-name">Poussières</span><span class="gas-status" id="st-pm25">-</span></div>
+            <div class="gas-card" id="card-co"><span class="gas-name">Échappement</span><span class="gas-status" id="st-co">-</span></div>
+            <div class="gas-card" id="card-no2"><span class="gas-name">Usines</span><span class="gas-status" id="st-no2">-</span></div>
+            <div class="gas-card" id="card-so2"><span class="gas-name">Soufre</span><span class="gas-status" id="st-so2">-</span></div>
         </div>
     </main>
 
     <div style="position: fixed; bottom: 20px; left: 15px; right: 15px;">
-        <button class="btn-pay" style="background:var(--blue); box-shadow: 0 4px 15px rgba(49,130,206,0.4);" onclick="fullScan()">🔍 ANALYSER MA POSITION</button>
+        <button class="btn-main" onclick="fullScan()">🔍 ANALYSER MA POSITION</button>
     </div>
 
     <script>
@@ -108,15 +120,14 @@
 
         function toggleProfile() { 
             document.getElementById('profile-panel').classList.toggle('open');
-            const o = document.getElementById('overlay'); o.style.display = o.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('overlay').style.display = document.getElementById('overlay').style.display === 'block' ? 'none' : 'block';
         }
 
         function renderProfiles() {
             const list = document.getElementById('profile-list');
             list.innerHTML = profiles.map((p, i) => `
                 <div class="profile-item ${p.active ? 'active' : ''}" onclick="setActive(${i})">
-                    <div><b>${p.name}</b><br><small>${p.cond}</small></div>
-                    ${profiles.length > 1 ? `<span onclick="deleteProfile(event, ${i})" style="color:var(--red); font-weight:bold;">✕</span>` : ''}
+                    <b>${p.name}</b> - <small>${p.cond}</small>
                 </div>
             `).join('');
         }
@@ -127,22 +138,12 @@
             if(!name) return;
             profiles.forEach(p => p.active = false);
             profiles.push({name, cond, active: true});
-            saveAndReload();
+            localStorage.setItem('sn_profiles', JSON.stringify(profiles));
+            location.reload();
         }
 
-        function setActive(index) {
-            profiles.forEach((p, i) => p.active = (i === index));
-            saveAndReload();
-        }
-
-        function deleteProfile(e, index) {
-            e.stopPropagation();
-            profiles.splice(index, 1);
-            if(!profiles.some(p => p.active)) profiles[0].active = true;
-            saveAndReload();
-        }
-
-        function saveAndReload() {
+        function setActive(i) {
+            profiles.forEach((p, idx) => p.active = (i === idx));
             localStorage.setItem('sn_profiles', JSON.stringify(profiles));
             location.reload();
         }
@@ -154,47 +155,49 @@
         }
 
         async function fullScan() {
-            document.getElementById('ai-advice').innerText = "Géolocalisation précise...";
+            document.getElementById('ai-advice').innerText = "Analyse satellite en cours...";
             navigator.geolocation.getCurrentPosition(async (p) => {
                 const lat = p.coords.latitude; const lon = p.coords.longitude;
                 try {
-                    // Localisation avec précision accrue
-                    const resG = await fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=3&appid=${API_KEY}`);
+                    const resG = await fetch(`https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`);
                     const dataG = await resG.json();
-                    let locName = "Antananarivo";
-                    if(dataG[0]) {
-                        // On cherche le nom le plus précis (souvent le quartier)
-                        locName = dataG[0].local_names?.fr || dataG[0].name;
-                        if(dataG[0].state) locName += `, ${dataG[0].state}`;
-                    }
-                    document.getElementById('user-location').innerText = `📍 ${locName}`;
+                    if(dataG[0]) document.getElementById('user-location').innerText = `📍 ${dataG[0].name}, ${dataG[0].state || 'Madagascar'}`;
 
                     const [resP, resW] = await Promise.all([
                         fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`),
                         fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=fr&appid=${API_KEY}`)
                     ]);
                     updateUI(await resP.json(), await resW.json());
-                } catch (e) { console.error(e); }
+                } catch (e) { alert("Erreur serveur"); }
             });
         }
 
         function updateUI(polluData, weather) {
             const pollu = polluData.list[0];
             const aqi = pollu.main.aqi;
+            const labels = ["Excellent", "Correct", "Moyen", "Mauvais", "Critique"];
+            const colors = ["#48bb78", "#48bb78", "#ed8936", "#f56565", "#742a2a"];
+
+            // Mise à jour pollution ET suppression du "En attente"
+            document.getElementById('aqi-text').innerText = "L'air est " + labels[aqi-1];
+            document.getElementById('aqi-text').style.color = colors[aqi-1];
+            document.getElementById('circle').innerText = aqi;
+            document.getElementById('circle').style.borderColor = colors[aqi-1];
+            document.getElementById('circle').style.color = colors[aqi-1];
+
+            // Météo
             document.getElementById('weather-box').style.display = 'block';
             document.getElementById('w-temp').innerText = Math.round(weather.main.temp) + "°C";
             document.getElementById('w-hum').innerText = weather.main.humidity + "%";
             document.getElementById('w-wind').innerText = Math.round(weather.wind.speed * 3.6) + "km/h";
 
-            const colors = ["#48bb78", "#48bb78", "#ed8936", "#f56565", "#742a2a"];
-            const circle = document.getElementById('circle');
-            circle.innerText = aqi;
-            circle.style.borderColor = colors[aqi-1];
-            circle.style.color = colors[aqi-1];
+            // BONUS : Logique des icônes
+            document.getElementById('act-mask').className = aqi >= 3 ? "action-item active" : "action-item";
+            document.getElementById('act-sport').className = aqi <= 2 ? "action-item active" : "action-item";
+            document.getElementById('act-window').className = aqi <= 2 ? "action-item active" : "action-item";
+            document.getElementById('act-child').className = aqi <= 3 ? "action-item active" : "action-item";
 
-            const active = profiles.find(p => p.active);
-            let txt = aqi <= 2 ? "Air sain pour vous." : "Attention " + active.name + ", l'air est chargé.";
-            document.getElementById('ai-advice').innerText = txt;
+            document.getElementById('ai-advice').innerText = aqi <= 2 ? "Conditions idéales pour vos activités." : "Pollution détectée : suivez les icônes allumées.";
 
             updateGas('pm25', pollu.components.pm2_5, 15, 30);
             updateGas('co', pollu.components.co, 500, 1000);
